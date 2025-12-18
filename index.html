@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thermal Radiation Simulation – Three.js</title>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #0b0b0b;
+  font-family: Arial, sans-serif;
+}
+
+#panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 300px;
+  background: rgba(0,0,0,0.85);
+  padding: 15px;
+  border-radius: 12px;
+  color: #fff;
+}
+
+label {
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+}
+
+.value {
+  margin-top: 8px;
+  font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- CONTROL PANEL -->
+<div id="panel">
+  <h3>Temperature Control</h3>
+
+  <label>Temperature (K)</label>
+  <input type="range" id="tempSlider" min="300" max="1200" value="600">
+
+  <label>Material</label>
+  <select id="materialSelect">
+    <option value="1">Blackbody (ε = 1.0)</option>
+    <option value="0.7">Metal (ε = 0.7)</option>
+    <option value="0.9">Ceramic (ε = 0.9)</option>
+  </select>
+
+  <div class="value">
+    T = <span id="tempVal">600</span> K<br>
+    Radiation = <span id="radVal">—</span> W/m²
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+/* ---------- SCENE ---------- */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0b0b);
+
+/* ---------- CAMERA ---------- */
+const camera = new THREE.PerspectiveCamera(
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100
+);
+camera.position.set(0, 1.5, 4);
+camera.lookAt(0, 1.5, 0);
+
+/* ---------- RENDERER ---------- */
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+/* ---------- LIGHTS ---------- */
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+const heatLight = new THREE.PointLight(0xff6600, 1.5, 15);
+heatLight.position.set(0, 2, 3);
+scene.add(heatLight);
+
+/* ---------- RADIATING SURFACE ---------- */
+const surfaceMaterial = new THREE.MeshStandardMaterial({
+  color: 0xff6600,
+  emissive: 0xff6600,
+  emissiveIntensity: 1,
+  side: THREE.DoubleSide
+});
+
+const surface = new THREE.Mesh(
+  new THREE.PlaneGeometry(2, 2),
+  surfaceMaterial
+);
+surface.position.set(0, 1.5, 0);
+scene.add(surface);
+
+/* ---------- FLOOR ---------- */
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(10, 10),
+  new THREE.MeshStandardMaterial({ color: 0x222222 })
+);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+/* ---------- PHYSICS ---------- */
+const sigma = 5.67e-8;
+let temperature = 600;
+let emissivity = 1.0;
+
+/* ---------- UI ---------- */
+const slider = document.getElementById("tempSlider");
+const tempVal = document.getElementById("tempVal");
+const radVal = document.getElementById("radVal");
+const materialSelect = document.getElementById("materialSelect");
+
+function temperatureColor(T) {
+  if (T < 500) return new THREE.Color(0xff3300);
+  if (T < 700) return new THREE.Color(0xff6600);
+  if (T < 900) return new THREE.Color(0xffcc00);
+  return new THREE.Color(0xffffcc);
+}
+
+function updateSimulation() {
+  const E = emissivity * sigma * Math.pow(temperature, 4);
+  const color = temperatureColor(temperature);
+
+  surface.material.color.copy(color);
+  surface.material.emissive.copy(color);
+  surface.material.emissiveIntensity = Math.min(temperature / 500, 3);
+
+  heatLight.color.copy(color);
+  heatLight.intensity = Math.min(E / 100000, 5);
+
+  tempVal.textContent = temperature;
+  radVal.textContent = E.toExponential(2);
+}
+
+slider.addEventListener("input", () => {
+  temperature = Number(slider.value);
+  updateSimulation();
+});
+
+materialSelect.addEventListener("change", () => {
+  emissivity = Number(materialSelect.value);
+  updateSimulation();
+});
+
+/* ---------- LOOP ---------- */
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
+
+/* ---------- RESIZE ---------- */
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+updateSimulation();
+</script>
+
+</body>
+</html>
