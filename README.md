@@ -4,7 +4,7 @@
 <b>Discipline | <b>information tech.
 :--|:--|
 <b> Lab | <b> virtual lab
-<b> Experiment|     <b> to adjust temp of rediation
+<b> Experiment|     <b> to adjust temp of radiation
 
 ### About the Experiment 
 
