@@ -19,5 +19,5 @@ Fill a brief description of this experiment here
 
 SrNo | Name | Faculty or Student | Department| Institute | Email id
 :--|:--|:--|:--|:--|:--|
-1 | Annu Dutt | Student | Information Technology | . | .
+1 | Annu Dutt | Student | Information Technology | Rajkiya Engineering College ,Banda | annudutt135790@gmail.com
 2 | . | . | . | . | .
